@@ -1,0 +1,32 @@
+torch --index-url https://download.pytorch.org/whl/cpu
+torchvision --index-url https://download.pytorch.org/whl/cpu
+torchaudio --index-url https://download.pytorch.org/whl/cpu
+torchsde
+numpy
+einops
+transformers
+tokenizers
+sentencepiece
+safetensors
+aiohttp
+pyyaml
+Pillow
+scipy
+tqdm
+psutil
+
+# Non-essential dependencies:
+kornia
+spandrel
+soundfile
+
+numpy
+opencv-python-headless
+imageio-ffmpeg
+lmdb
+timm
+rich
+albumentations
+ultralytics
+tyro==0.8.5
+dill
