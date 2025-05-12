@@ -17,6 +17,7 @@ psutil
 fastapi
 uvicorn
 gunicorn
+onnxruntime-gpu==1.15.1  # Ou onnxruntime para CPU
 
 # Non-essential dependencies:
 kornia
