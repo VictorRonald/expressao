@@ -11,32 +11,6 @@ import time
 
 app = FastAPI()
 
-# Caminho correto dos modelos
-MODEL_DIR = "advancedliveportrait/models/liveportrait"
-
-models = [
-    "appearance_feature_extractor.onnx",
-    "motion_extractor.onnx",
-    "spade_generator.onnx",
-    "stitching_retargeting_module.onnx",
-    "warping_module.onnx"
-]
-
-# Carregar modelos e verificar se existem
-onnx_sessions = {}
-print("Iniciando servidor e carregando pipeline...")
-print("Verificando modelos ONNX carregados...")
-
-for model in models:
-    model_path = os.path.join(MODEL_DIR, model)
-    if not os.path.exists(model_path):
-        print(f"ERRO: Arquivo {model} não encontrado no diretório {MODEL_DIR}!")
-    else:
-        try:
-            onnx_sessions[model] = ort.InferenceSession(model_path)
-            print(f"Modelo {model} carregado com sucesso!")
-        except Exception as e:
-            print(f"Erro ao carregar {model}: {e}")
 
 print("Pipeline carregado com sucesso!")
 
