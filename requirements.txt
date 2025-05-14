@@ -3,7 +3,7 @@ torchvision --index-url https://download.pytorch.org/whl/cpu
 torchaudio --index-url https://download.pytorch.org/whl/cpu
 torchsde
 
-numpy==1.24.4
+numpy
 
 einops
 transformers
