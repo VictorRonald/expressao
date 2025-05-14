@@ -19,7 +19,8 @@ psutil
 fastapi
 uvicorn
 gunicorn
-onnxruntime==1.15.1  # Ou onnxruntime para CPU
+onnxruntime==1.22.0
+
 python-multipart
 
 # Non-essential dependencies:
