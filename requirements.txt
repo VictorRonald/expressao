@@ -18,6 +18,7 @@ fastapi
 uvicorn
 gunicorn
 onnxruntime-gpu==1.15.1  # Ou onnxruntime para CPU
+python-multipart
 
 # Non-essential dependencies:
 kornia
