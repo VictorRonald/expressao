@@ -2,7 +2,9 @@ torch --index-url https://download.pytorch.org/whl/cpu
 torchvision --index-url https://download.pytorch.org/whl/cpu
 torchaudio --index-url https://download.pytorch.org/whl/cpu
 torchsde
-numpy
+
+numpy==1.24.4
+
 einops
 transformers
 tokenizers
