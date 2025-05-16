@@ -5,60 +5,64 @@ import numpy as np
 from PIL import Image
 from io import BytesIO
 import os
-import time
 import psutil
+import time
 from advancedliveportrait.nodes import ExpressionEditor
 
 app = FastAPI()
 
-def log_resource_usage(tag=""):
+# Carrega o modelo uma vez
+expression_editor = ExpressionEditor()
+
+def log_memory_usage(tag=""):
     process = psutil.Process(os.getpid())
-    mem_mb = process.memory_info().rss / 1024 / 1024
-    cpu = process.cpu_percent(interval=0.1)
-    print(f"[{tag}] Memória usada: {mem_mb:.2f} MB | CPU: {cpu:.1f}%")
+    mem_mb = process.memory_info().rss / (1024 * 1024)
+    print(f"[{tag}] Memória usada: {mem_mb:.2f} MB")
 
 def load_image(image_file):
     """Carrega uma imagem do UploadFile."""
     pil_image = Image.open(image_file.file).convert("RGB")
-    np_image = np.array(pil_image).astype(np.float32) / 255.0  # Mantém FP32
-    return torch.from_numpy(np_image).unsqueeze(0)  # [1, H, W, C]
+    np_image = np.array(pil_image).astype(np.float32) / 255.0
+    return torch.from_numpy(np_image).unsqueeze(0)
 
 def process_expression_v2(src_image, params):
-    """Processamento com os parâmetros da main.py"""
+    """Processamento com os novos parâmetros da main.py"""
     try:
+        log_memory_usage("Antes do processamento")
         start_time = time.time()
 
-        log_resource_usage("INICIANDO_PIPELINE")
+        with torch.no_grad():
+            output = expression_editor.run(
+                src_image=src_image,
+                src_ratio=params.get("src_ratio", 1.0),
+                sample_ratio=params.get("sample_ratio", 1.0),
+                rotate_pitch=params.get("rotate_pitch", 0.0),
+                rotate_yaw=params.get("rotate_yaw", 0.0),
+                rotate_roll=params.get("rotate_roll", 0.0),
+                blink=params.get("blink", 0.0),
+                eyebrow=params.get("eyebrow", 0.0),
+                wink=params.get("wink", 0.0),
+                pupil_x=params.get("pupil_x", 0.0),
+                pupil_y=params.get("pupil_y", 0.0),
+                aaa=params.get("aaa", 0.0),
+                eee=params.get("eee", 0.0),
+                woo=params.get("woo", 0.0),
+                smile=params.get("smile", 0.0),
+                sample_parts=params.get("sample_parts", "OnlyExpression"),
+                crop_factor=params.get("crop_factor", 1.7),
+                sample_image=None,
+                motion_link=None,
+                add_exp=None
+            )
 
-        expression_editor = ExpressionEditor()
-        output = expression_editor.run(
-            src_image=src_image,
-            src_ratio=params.get("src_ratio", 1.0),
-            sample_ratio=params.get("sample_ratio", 1.0),
-            rotate_pitch=params.get("rotate_pitch", 0.0),
-            rotate_yaw=params.get("rotate_yaw", 0.0),
-            rotate_roll=params.get("rotate_roll", 0.0),
-            blink=params.get("blink", 0.0),
-            eyebrow=params.get("eyebrow", 0.0),
-            wink=params.get("wink", 0.0),
-            pupil_x=params.get("pupil_x", 0.0),
-            pupil_y=params.get("pupil_y", 0.0),
-            aaa=params.get("aaa", 0.0),
-            eee=params.get("eee", 0.0),
-            woo=params.get("woo", 0.0),
-            smile=params.get("smile", 0.0),
-            sample_parts=params.get("sample_parts", "OnlyExpression"),
-            crop_factor=params.get("crop_factor", 1.7),
-            sample_image=None,
-            motion_link=None,
-            add_exp=None
-        )
-
-        log_resource_usage("DEPOIS_PIPELINE")
-
-        output_image = Image.fromarray(np.array(output['result'][0] * 255, dtype=np.uint8)[0])
+        result_image = output['result'][0]
+        output_image = Image.fromarray(np.array(result_image * 255, dtype=np.uint8)[0])
         inference_time = time.time() - start_time
         print(f"Tempo de inferência: {inference_time:.4f}s")
+
+        log_memory_usage("Após o processamento")
+        del output, result_image
+        torch.cuda.empty_cache()
 
         return output_image
 
@@ -87,14 +91,9 @@ async def process_image(
     crop_factor: float = Form(1.7)
 ):
     try:
-        print("Recebendo imagem e parâmetros...")
-        log_resource_usage("ANTES_CARREGAMENTO_IMAGEM")
-
         src_image = load_image(image)
 
-        log_resource_usage("DEPOIS_CARREGAMENTO_IMAGEM")
-
-        if emotion and intensity:
+        if emotion and intensity is not None:
             print(f"Modo compatibilidade - Emoção: {emotion}, Intensidade: {intensity}")
             expressions = {
                 "feliz": lambda i: {"smile": 0.3 * i},
@@ -133,9 +132,7 @@ async def process_image(
         img_io = BytesIO()
         output_image.save(img_io, format='PNG')
         img_io.seek(0)
-
-        log_resource_usage("FIM_REQUEST")
-
+        del output_image, src_image
         return StreamingResponse(img_io, media_type="image/png")
 
     except ValueError as e:
